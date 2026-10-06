@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useCart } from '@/store/cartStore'
-import { ProductService } from '@/services/productService'
+import { filterProducts } from '@/services/productService'
+import { useProducts } from '@/store/productsContext'
 import { getCategoriesByTerrain } from '@/data/categories'
 import ProductCard from '@/components/ProductCard/ProductCard'
 import type { Terrain } from '@/types'
@@ -30,6 +31,7 @@ const categoryIcons: Record<string, string> = {
 
 export default function ATVConfigurator({ terrain, className }: ATVConfiguratorProps) {
   const { state } = useCart()
+  const allProducts = useProducts()
   const categories = getCategoriesByTerrain(terrain)
   const [activeCategory, setActiveCategory] = useState<string>(categories[0]?.id ?? '')
 
@@ -38,7 +40,7 @@ export default function ATVConfigurator({ terrain, className }: ATVConfiguratorP
       `${state.vehicle.brand.toLowerCase()}-${state.vehicle.model.toLowerCase().replace(/\s+/g, '-')}`
     : undefined
 
-  const products = ProductService.getFiltered({
+  const products = filterProducts(allProducts, {
     terrain,
     category: activeCategory,
     vehicleId: vehicleFilter,

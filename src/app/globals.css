@@ -2,20 +2,23 @@
 
 /* ── Design tokens ────────────────────────────────────────────────────────── */
 :root {
-  /* Color palette */
-  --black:  #0A0A0A;
-  --graphite: #171717;
-  --gray: #2A2A2A;
-  --white: #F5F5F5;
+  /* Color palette (MBTEK: negro, rojo, cromo) */
+  --black:  #050505;
+  --graphite: #0d0d0d;
+  --gray: #1a1a1a;
+  --white: #F4F4F4;
+  --chrome-1: #6b6b6f;
+  --chrome-2: #f4f4f4;
+  --line: rgba(255, 255, 255, 0.1);
 
   /* Accent — change in src/config/site.ts; update here too */
-  --accent:       #DC2626;  /* red-600 */
-  --accent-hover: #B91C1C;  /* red-700 */
-  --accent-muted: #DC262620;
+  --accent:       #e2001a;
+  --accent-hover: #ff1a33;
+  --accent-muted: #e2001a20;
 
   /* Terrain-specific overrides (set by .terrain-tierra / .terrain-arena) */
-  --terrain-primary:   #DC2626;
-  --terrain-secondary: #B91C1C;
+  --terrain-primary:   #e2001a;
+  --terrain-secondary: #a4001a;
 
   /* Background & foreground */
   --background: var(--black);
@@ -25,6 +28,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-sans: var(--font-oswald), Arial, Helvetica, sans-serif;
+  --font-display: var(--font-anton), var(--font-oswald), sans-serif;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -42,11 +47,76 @@ html {
 body {
   background: var(--black);
   color: var(--white);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-oswald), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
+
+/* Todos los títulos pesados de la tienda usan la tipografía de la marca */
+.font-black,
+.display-xl,
+.display-lg {
+  font-family: var(--font-anton), var(--font-oswald), sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ── Piezas visuales heredadas de la landing ─────────────────────────────── */
+.mb-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+.mb-eyebrow::before {
+  content: '';
+  width: 34px;
+  height: 2px;
+  background: var(--accent);
+}
+.mb-eyebrow span {
+  font-family: var(--font-anton), sans-serif;
+  letter-spacing: 3px;
+  font-size: 13px;
+  color: #b8b8b8;
+  text-transform: uppercase;
+}
+.mb-title {
+  margin: 0;
+  display: inline-block;
+  transform: skewX(-8deg);
+  font-family: var(--font-anton), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: clamp(26px, 4.5vw, 42px);
+  line-height: 1.1;
+  color: var(--chrome-2);
+}
+.mb-title .accent { color: var(--accent); }
+
+.mb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-oswald), sans-serif;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  font-size: 13px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 14px 28px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color .25s ease, color .25s ease, background .25s ease, transform .2s ease;
+  white-space: nowrap;
+}
+.mb-btn-solid { background: var(--accent); color: #fff; border-color: var(--accent); }
+.mb-btn-solid:hover { background: var(--accent-hover); transform: translateY(-2px); }
+.mb-btn-outline { background: transparent; color: #fff; border-color: rgba(255,255,255,0.35); }
+.mb-btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(226,0,26,0.08); }
 
 /* ── Terrain contexts ─────────────────────────────────────────────────────── */
 .terrain-tierra {

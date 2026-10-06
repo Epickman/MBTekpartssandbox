@@ -1,18 +1,20 @@
 import type { Metadata } from 'next'
-import { ProductService } from '@/services/productService'
+import { getLiveProducts } from '@/services/liveProducts'
 import ProductGrid from '@/components/ProductGrid/ProductGrid'
+import PromoBanner from '@/components/PromoBanner/PromoBanner'
 
 export const metadata: Metadata = {
   title: 'Catálogo de Productos',
   description: 'Repuestos y accesorios para ATV, cuatriciclos y MX. Compatible con Yamaha, Honda, Can-Am, Polaris, Kawasaki, Suzuki y más.',
 }
 
-export default function ProductsPage({
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<{ tipo?: string; categoria?: string }>
 }) {
-  const products = ProductService.getAll()
+  const products = await getLiveProducts()
+  const { categoria } = await searchParams
 
   return (
     <div className="min-h-screen bg-zinc-950 pt-[80px]">
@@ -33,7 +35,10 @@ export default function ProductsPage({
         showFilters
         title=""
         className="max-w-screen-xl mx-auto"
+        initialCategory={categoria}
       />
+
+      <PromoBanner />
     </div>
   )
 }

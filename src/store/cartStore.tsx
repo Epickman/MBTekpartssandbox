@@ -7,7 +7,8 @@ import {
   useEffect,
   type ReactNode,
 } from 'react'
-import type { CartItem, ConfiguratorState, Product, Vehicle, Terrain } from '@/types'
+import type { ConfiguratorState, Product, Vehicle, Terrain } from '@/types'
+import { useProducts } from '@/store/productsContext'
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 
@@ -117,15 +118,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [state])
 
+  // El carrito guarda una copia del producto al agregarlo; se reemplaza por la versión actual
+  // del catálogo para que precio, stock y fotos estén siempre al día.
+  const catalog = useProducts()
+  const freshState: ConfiguratorState = {
+    ...state,
+    items: state.items.map((item) => {
+      const current =
+        catalog.find((p) => p.id === item.product.id) ??
+        catalog.find((p) => p.sku && p.sku === item.product.sku)
+      return current ? { ...item, product: { ...current, id: item.product.id } } : item
+    }),
+  }
+
   const value: CartContextValue = {
-    state,
+    state: freshState,
     setTerrain: (terrain) => dispatch({ type: 'SET_TERRAIN', terrain }),
     setVehicle: (vehicle) => dispatch({ type: 'SET_VEHICLE', vehicle }),
     addItem: (product, quantity) => dispatch({ type: 'ADD_ITEM', product, quantity }),
     removeItem: (productId) => dispatch({ type: 'REMOVE_ITEM', productId }),
     updateQty: (productId, quantity) => dispatch({ type: 'UPDATE_QTY', productId, quantity }),
     clear: () => dispatch({ type: 'CLEAR' }),
-    totalItems: state.items.reduce((sum, i) => sum + i.quantity, 0),
+    totalItems: freshState.items.reduce((sum, i) => sum + i.quantity, 0),
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

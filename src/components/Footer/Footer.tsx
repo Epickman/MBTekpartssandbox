@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { MessageCircle } from 'lucide-react'
 import { InstagramIcon } from '@/components/ui/icons'
 import siteConfig from '@/config/site'
@@ -24,7 +25,7 @@ export default function Footer() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 py-4 px-8 bg-[var(--accent)] text-black font-black text-sm tracking-[0.2em] uppercase rounded-full hover:bg-[var(--accent-hover)] transition-all hover:scale-105"
+            className="flex items-center gap-2 py-4 px-8 bg-[var(--accent)] text-white font-semibold text-sm tracking-[0.2em] uppercase rounded-sm hover:bg-[var(--accent-hover)] transition-all hover:scale-105"
           >
             <MessageCircle size={18} />
             WhatsApp
@@ -51,10 +52,13 @@ export default function Footer() {
       <div className="max-w-screen-xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Brand */}
         <div className="lg:col-span-2">
-          <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-white text-2xl font-black">MBTEK</span>
-            <span className="text-[var(--accent)] text-2xl font-light tracking-widest">PARTS</span>
-          </div>
+          <Image
+            src="/brand/mbtek-logo.png"
+            alt="MBTEK Parts Atv & Mx"
+            width={1677}
+            height={405}
+            className="mb-4 h-12 w-auto"
+          />
           <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">
             Repuestos, piezas y accesorios para ATV, cuatriciclos, MX y vehículos off-road.
             Armá tu ATV según el terreno.

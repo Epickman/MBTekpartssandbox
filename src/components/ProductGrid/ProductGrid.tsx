@@ -12,6 +12,7 @@ interface ProductGridProps {
   showFilters?: boolean
   title?: string
   className?: string
+  initialCategory?: string
 }
 
 export default function ProductGrid({
@@ -20,8 +21,11 @@ export default function ProductGrid({
   showFilters = false,
   title,
   className,
+  initialCategory,
 }: ProductGridProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [activeCategory, setActiveCategory] = useState<string>(
+    initialCategory && categories.some((c) => c.id === initialCategory) ? initialCategory : 'all'
+  )
 
   const filterCategories = terrain ? getCategoriesByTerrain(terrain) : categories
   const filtered =

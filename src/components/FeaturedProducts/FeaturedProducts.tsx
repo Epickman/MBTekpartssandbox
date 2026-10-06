@@ -1,40 +1,19 @@
-'use client'
-
 import Link from 'next/link'
-import { ProductService } from '@/services/productService'
+import { getLiveFeatured } from '@/services/liveProducts'
 import ProductCard from '@/components/ProductCard/ProductCard'
 
-export default function FeaturedProducts() {
-  const featured = ProductService.getFeatured()
+export default async function FeaturedProducts() {
+  const featured = await getLiveFeatured()
 
   return (
-    <section className="bg-zinc-900/50 py-20 px-4" aria-labelledby="featured-heading">
+    <section className="bg-[var(--black)] py-[clamp(56px,9vw,110px)] px-4" aria-labelledby="featured-heading">
       <div className="max-w-screen-xl mx-auto">
         {/* Editorial header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
-          <div>
-            <p className="text-zinc-500 text-xs tracking-[0.3em] uppercase mb-3">
-              Selección MBTEK
-            </p>
-            <h2
-              id="featured-heading"
-              className="text-white text-3xl sm:text-5xl font-black tracking-tight uppercase"
-            >
-              FEATURED
-            </h2>
-            <h2 className="text-[var(--accent)] text-3xl sm:text-5xl font-black tracking-tight uppercase">
-              PARTS
-            </h2>
-          </div>
-          <Link
-            href="/productos"
-            className="inline-flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-semibold tracking-widest uppercase transition-colors"
-          >
-            Ver catálogo completo
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M3 8h10M10 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
+        <div className="mb-[clamp(30px,5vw,54px)] text-center">
+          <div className="mb-eyebrow"><span>Lo más pedido</span></div>
+          <h2 id="featured-heading" className="mb-title">
+            Productos <span className="accent">destacados</span>
+          </h2>
         </div>
 
         {/* Grid */}
@@ -46,6 +25,12 @@ export default function FeaturedProducts() {
               size={i === 0 ? 'large' : 'default'}
             />
           ))}
+        </div>
+
+        <div className="mt-[clamp(30px,5vw,48px)] flex justify-center">
+          <Link href="/productos" className="mb-btn mb-btn-outline">
+            Ver todos los productos
+          </Link>
         </div>
       </div>
     </section>

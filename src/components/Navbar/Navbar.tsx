@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, MessageCircle, ShoppingBag } from 'lucide-react'
+import Image from 'next/image'
+import { Menu, X, MessageCircle } from 'lucide-react'
 import { InstagramIcon } from '@/components/ui/icons'
-import { useCart } from '@/store/cartStore'
 import siteConfig from '@/config/site'
 import { cn } from '@/utils/cn'
 
 const navLinks = [
   { label: 'Tienda', href: '/tienda' },
-  { label: 'Configurar ATV', href: '/tienda#configurar' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Contacto', href: '/contacto' },
 ]
@@ -18,7 +17,6 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
-  const { totalItems, state } = useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -40,8 +38,8 @@ export default function Navbar() {
         // Account for TopBrandBar height (≈ 32px)
         'mt-[32px]',
         scrolled
-          ? 'bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800 py-3'
-          : 'bg-transparent py-5'
+          ? 'bg-[#050505]/95 backdrop-blur-md border-b border-white/10 py-3'
+          : 'bg-gradient-to-b from-black/70 to-transparent py-5'
       )}
     >
       <nav className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-between">
@@ -51,22 +49,22 @@ export default function Navbar() {
           className="flex items-center gap-2 group"
           aria-label="MBTEK Parts — Inicio"
         >
-          <span
-            className={cn(
-              'text-xl font-black tracking-tight transition-colors',
-              scrolled ? 'text-white' : 'text-white'
-            )}
-          >
-            MBTEK
-          </span>
-          <span
-            className={cn(
-              'text-xl font-light tracking-widest transition-colors',
-              'text-[var(--accent)]'
-            )}
-          >
-            PARTS
-          </span>
+          <Image
+            src="/brand/mbtek-flag.png"
+            alt=""
+            width={166}
+            height={61}
+            priority
+            className={cn('w-auto -mt-2 transition-all duration-300', scrolled ? 'h-4' : 'h-5')}
+          />
+          <Image
+            src="/brand/mbtek-logo-text.png"
+            alt="MBTEK Parts Atv & Mx"
+            width={1675}
+            height={405}
+            priority
+            className={cn('w-auto transition-all duration-300', scrolled ? 'h-8' : 'h-10')}
+          />
         </Link>
 
         {/* Desktop nav */}
@@ -75,7 +73,7 @@ export default function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="text-sm tracking-wide text-zinc-300 hover:text-white transition-colors font-medium uppercase"
+                className="relative py-1.5 text-[13px] tracking-[1.5px] text-zinc-200 hover:text-white transition-colors font-medium uppercase after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[var(--accent)] after:transition-transform after:duration-300 hover:after:scale-x-100"
               >
                 {link.label}
               </Link>
@@ -85,20 +83,6 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden lg:flex items-center gap-4">
-          {/* Cart badge */}
-          <Link
-            href="/configurador"
-            className="relative text-zinc-400 hover:text-white transition-colors"
-            aria-label={`Mi ATV (${totalItems} productos)`}
-          >
-            <ShoppingBag size={20} />
-            {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
-          </Link>
-
           <a
             href={`https://www.instagram.com/${siteConfig.instagram}/`}
             target="_blank"
@@ -113,7 +97,7 @@ export default function Navbar() {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-black font-bold text-sm px-4 py-2 rounded-full transition-all hover:scale-105"
+            className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold uppercase tracking-[1.5px] text-[13px] px-4 py-2 rounded-sm transition-all hover:scale-105"
             aria-label="Contactar por WhatsApp"
           >
             <MessageCircle size={16} />
@@ -121,20 +105,8 @@ export default function Navbar() {
           </a>
         </div>
 
-        {/* Mobile: cart + burger */}
+        {/* Mobile: burger */}
         <div className="flex lg:hidden items-center gap-4">
-          <Link
-            href="/configurador"
-            className="relative text-zinc-400 hover:text-white transition-colors"
-            aria-label={`Mi ATV (${totalItems} productos)`}
-          >
-            <ShoppingBag size={20} />
-            {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
-          </Link>
           <button
             onClick={() => setOpen(!open)}
             className="text-white p-1"
@@ -171,7 +143,7 @@ export default function Navbar() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 bg-[var(--accent)] text-black font-bold text-sm py-3 rounded-full"
+              className="flex-1 flex items-center justify-center gap-2 bg-[var(--accent)] text-white font-semibold uppercase tracking-[1.5px] text-sm py-3 rounded-sm"
             >
               <MessageCircle size={16} />
               WhatsApp

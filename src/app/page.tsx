@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
+import HeroScrub from '@/components/HeroScrub/HeroScrub'
 import HeroSection from '@/components/HeroSection/HeroSection'
-import TerrainSelector from '@/components/TerrainSelector/TerrainSelector'
+import MostWanted from '@/components/MostWanted/MostWanted'
+import PromoBanner from '@/components/PromoBanner/PromoBanner'
 import FeaturedProducts from '@/components/FeaturedProducts/FeaturedProducts'
-import WhyMBTEK from '@/components/ui/WhyMBTEK'
-import ATVMXSplit from '@/components/ui/ATVMXSplit'
-import InstagramSection from '@/components/ui/InstagramSection'
+import CategoriesGrid from '@/components/CategoriesGrid/CategoriesGrid'
 import siteConfig from '@/config/site'
 
 export const metadata: Metadata = {
@@ -15,23 +15,24 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      {/* ── Hero principal ────────────────────────────────────── */}
+      {/* ── Intro: logo + video scrolleable + carteles ────────── */}
+      <HeroScrub />
+
+      {/* ── Armá tu ATV según el terreno (TIERRA / ARENA) ─────── */}
       <HeroSection />
 
-      {/* ── Terrain selector (TIERRA / ARENA) ─────────────────── */}
-      <TerrainSelector />
+      {/* ── Categorías ────────────────────────────────────────── */}
+      <CategoriesGrid />
 
-      {/* ── ATV / MX split ────────────────────────────────────── */}
-      <ATVMXSplit />
+      {/* ── Cuatriciclos más buscados ─────────────────────────── */}
+      <MostWanted />
 
-      {/* ── Featured parts ────────────────────────────────────── */}
+      {/* ── Promociones de la semana ──────────────────────────── */}
+      <PromoBanner />
+
+      {/* ── Productos destacados ──────────────────────────────── */}
       <FeaturedProducts />
 
-      {/* ── Why MBTEK ─────────────────────────────────────────── */}
-      <WhyMBTEK />
-
-      {/* ── Instagram ─────────────────────────────────────────── */}
-      <InstagramSection />
     </>
   )
 }

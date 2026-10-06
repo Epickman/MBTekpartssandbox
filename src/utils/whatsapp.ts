@@ -1,8 +1,15 @@
 import siteConfig from '@/config/site'
-import type { WhatsAppOrderParams } from '@/types'
+import type { Product, WhatsAppOrderParams } from '@/types'
+import { formatPrice } from '@/utils/formatPrice'
 
 // Single source of truth for WhatsApp message generation
 // Use this function everywhere — never hardcode messages or numbers
+
+function priceLines(product: Product, quantity: number, indent = ''): string {
+  if (product.price == null) return `${indent}Precio: a consultar`
+  const unit = `${indent}Precio: ${formatPrice(product.price)}`
+  return quantity > 1 ? `${unit} c/u\n${indent}Subtotal: ${formatPrice(product.price * quantity)}` : unit
+}
 
 export function generateWhatsAppOrder(params: WhatsAppOrderParams): string {
   const { items, product, quantity = 1, vehicle, terrain, url } = params
@@ -24,7 +31,8 @@ export function generateWhatsAppOrder(params: WhatsAppOrderParams): string {
       `SKU: ${product.sku}\n` +
       vehicleStr +
       terrainStr +
-      `Cantidad: ${quantity}` +
+      `Cantidad: ${quantity}\n` +
+      priceLines(product, quantity) +
       urlStr
     )
   }
@@ -39,9 +47,17 @@ export function generateWhatsAppOrder(params: WhatsAppOrderParams): string {
     const itemLines = items
       .map(
         (item, i) =>
-          `${i + 1}. ${item.product.name}\n   SKU: ${item.product.sku}\n   Cantidad: ${item.quantity}`
+          `${i + 1}. ${item.product.name}\n   SKU: ${item.product.sku}\n   Cantidad: ${item.quantity}\n` +
+          priceLines(item.product, item.quantity, '   ')
       )
       .join('\n\n')
+
+    const total = items.reduce((sum, i) => sum + (i.product.price ?? 0) * i.quantity, 0)
+    const someUnpriced = items.some((i) => i.product.price == null)
+    const totalStr =
+      total > 0
+        ? `\n\nTotal: ${formatPrice(total)}` + (someUnpriced ? ' (sin contar los productos a consultar)' : '')
+        : ''
 
     return (
       header +
@@ -49,7 +65,8 @@ export function generateWhatsAppOrder(params: WhatsAppOrderParams): string {
       `${vehicleStr}\n` +
       (terrainStr ? `${terrainStr}\n` : '') +
       `\nProductos:\n\n` +
-      itemLines
+      itemLines +
+      totalStr
     )
   }
 

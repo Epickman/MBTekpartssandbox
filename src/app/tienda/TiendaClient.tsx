@@ -40,18 +40,23 @@ const emptyFilters: Filters = { search: '', terrain: 'all', cats: [], brand: '',
 
 export default function TiendaClient({ products }: { products: Product[] }) {
   const [tab, setTab] = useState<Tab>('catalogo')
-  const [heroTerrain, setHeroTerrain] = useState<Terrain | 'all'>('all')
-
-  const handleHeroTerrain = (t: Terrain) => {
-    setHeroTerrain(t)
-    setTab('catalogo')
-  }
 
   return (
     <div className="min-h-screen bg-zinc-950 pb-[72px]">
 
       {/* ── HERO / INTRO ─────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-zinc-950 pt-[64px]">
+      <div className="relative overflow-hidden bg-zinc-950 pt-[64px] flex items-end min-h-[440px] sm:min-h-[560px] lg:min-h-[760px]">
+        {/* Background banner */}
+        <Image
+          src="/images/bannertienda-sinlogo.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[60%_center] lg:object-center"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-zinc-950/95 via-zinc-950/60 to-zinc-950/10" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-transparent via-60% to-zinc-950" />
         {/* Glow */}
         <div
           className="pointer-events-none absolute inset-0"
@@ -69,13 +74,12 @@ export default function TiendaClient({ products }: { products: Product[] }) {
           }}
         />
 
-        <div className="relative z-10 max-w-screen-xl mx-auto px-4 sm:px-6 pt-14 pb-10">
-          <p className="text-zinc-600 text-[10px] tracking-[0.35em] uppercase mb-4 font-medium">
-            Catálogo & Configurador
-          </p>
-
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div>
+        <div className="relative z-10 w-full max-w-screen-xl mx-auto px-4 sm:px-6 pt-14 pb-10 lg:pb-16">
+          <div className="flex">
+            <div className="text-left">
+              <p className="text-zinc-600 text-[10px] tracking-[0.35em] uppercase mb-4 font-medium">
+                Catálogo & Configurador
+              </p>
               <h1 className="text-white font-black uppercase leading-[0.9] tracking-tight">
                 <span className="block" style={{ fontSize: 'clamp(2.8rem, 9vw, 7rem)' }}>TIENDA</span>
                 <span className="block text-[var(--accent)]" style={{ fontSize: 'clamp(2.8rem, 9vw, 7rem)' }}>MBTEK</span>
@@ -84,46 +88,6 @@ export default function TiendaClient({ products }: { products: Product[] }) {
                 Repuestos premium para ATV y MX. Filtrá por terreno o configurá tu máquina parte por parte.
               </p>
             </div>
-
-            {/* Terrain quick-select */}
-            <div className="flex gap-3 lg:pb-1">
-              <button
-                onClick={() => handleHeroTerrain('tierra')}
-                className="group relative overflow-hidden flex flex-col items-start gap-1.5 py-4 px-6 rounded-2xl border transition-all duration-300 text-left min-w-[130px]"
-                style={
-                  heroTerrain === 'tierra'
-                    ? { borderColor: '#92400e', background: 'rgba(120,53,15,0.3)' }
-                    : { borderColor: '#27272a', background: '#18181b' }
-                }
-              >
-                <span className="text-[10px] tracking-[0.25em] uppercase font-bold text-amber-600">Off-Road</span>
-                <span className="text-2xl font-black uppercase text-white">TIERRA</span>
-                <span className="text-zinc-600 text-[10px] tracking-wide">Barro · Montaña</span>
-              </button>
-
-              <button
-                onClick={() => handleHeroTerrain('arena')}
-                className="group relative overflow-hidden flex flex-col items-start gap-1.5 py-4 px-6 rounded-2xl border transition-all duration-300 text-left min-w-[130px]"
-                style={
-                  heroTerrain === 'arena'
-                    ? { borderColor: '#78350f', background: 'rgba(113,63,18,0.3)' }
-                    : { borderColor: '#27272a', background: '#18181b' }
-                }
-              >
-                <span className="text-[10px] tracking-[0.25em] uppercase font-bold text-yellow-500">Dunes</span>
-                <span className="text-2xl font-black uppercase text-white">ARENA</span>
-                <span className="text-zinc-600 text-[10px] tracking-wide">Dunas · Médanos</span>
-              </button>
-
-              {heroTerrain !== 'all' && (
-                <button
-                  onClick={() => setHeroTerrain('all')}
-                  className="self-center text-zinc-600 hover:text-zinc-300 text-[10px] tracking-wide uppercase transition-colors whitespace-nowrap"
-                >
-                  Ver todos
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -131,7 +95,7 @@ export default function TiendaClient({ products }: { products: Product[] }) {
       {/* ── TAB CONTENT ─────────────────────────────────────────────────────── */}
       <div className="animate-fade-in">
         {tab === 'catalogo' ? (
-          <CatalogoTab products={products} initialTerrain={heroTerrain} />
+          <CatalogoTab products={products} initialTerrain="all" />
         ) : (
           <ConfiguradorTab />
         )}
@@ -700,11 +664,13 @@ function ConfiguradorTab() {
 // BUILD STEP — diagram + products
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { ProductService } from '@/services/productService'
+import { filterProducts } from '@/services/productService'
+import { useProducts } from '@/store/productsContext'
 import { getCategoriesByTerrain } from '@/data/categories'
 
 function BuildStep({ terrain }: { terrain: Terrain }) {
   const { state, addItem } = useCart()
+  const allProducts = useProducts()
   const cats = getCategoriesByTerrain(terrain)
   const [activeCategory, setActiveCategory] = useState<string>(cats[0]?.id ?? '')
 
@@ -712,7 +678,7 @@ function BuildStep({ terrain }: { terrain: Terrain }) {
     ? `${state.vehicle.brand.toLowerCase()}-${state.vehicle.model.toLowerCase().replace(/\s+/g, '-')}`
     : undefined
 
-  const products = ProductService.getFiltered({ terrain, category: activeCategory, vehicleId: vehicleFilter })
+  const products = filterProducts(allProducts, { terrain, category: activeCategory, vehicleId: vehicleFilter })
   const activeCatLabel = cats.find(c => c.id === activeCategory)?.name ?? ''
 
   return (

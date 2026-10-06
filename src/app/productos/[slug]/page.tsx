@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MessageCircle, ArrowLeft, Package, Tag, Truck } from 'lucide-react'
-import { ProductService } from '@/services/productService'
-import { products } from '@/data/products'
+import { getLiveProducts, getLiveBySlug } from '@/services/liveProducts'
 import { formatPrice, formatStock } from '@/utils/formatPrice'
 import ProductDetailClient from './ProductDetailClient'
 
@@ -14,12 +13,12 @@ interface Props {
 
 // Static params for build-time generation
 export async function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }))
+  return (await getLiveProducts()).map((p) => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const product = ProductService.getBySlug(slug)
+  const product = await getLiveBySlug(slug)
   if (!product) return {}
   return {
     title: product.name,
@@ -29,10 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params
-  const product = ProductService.getBySlug(slug)
+  const product = await getLiveBySlug(slug)
   if (!product) notFound()
 
-  const related = ProductService.getByCategory(product.category)
+  const related = (await getLiveProducts())
+    .filter((p) => p.category === product.category)
     .filter((p) => p.id !== product.id)
     .slice(0, 3)
 

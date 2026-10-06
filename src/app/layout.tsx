@@ -1,11 +1,17 @@
 import type { Metadata, Viewport } from 'next'
+import { Anton, Oswald } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/store/cartStore'
+import { ProductsProvider } from '@/store/productsContext'
+import { getLiveProducts } from '@/services/liveProducts'
 import TopBrandBar from '@/components/TopBrandBar/TopBrandBar'
 import Navbar from '@/components/Navbar/Navbar'
 import Cart from '@/components/Cart/Cart'
 import Footer from '@/components/Footer/Footer'
 import siteConfig from '@/config/site'
+
+const anton = Anton({ weight: '400', subsets: ['latin'], variable: '--font-anton', display: 'swap' })
+const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald', display: 'swap' })
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.website),
@@ -46,17 +52,20 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0A0A0A',
+  themeColor: '#050505',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const products = await getLiveProducts()
+
   return (
-    <html lang="es-AR" suppressHydrationWarning>
+    <html lang="es-AR" className={`${anton.variable} ${oswald.variable}`} suppressHydrationWarning>
       <body className="bg-[var(--black)] text-[var(--white)] antialiased">
+        <ProductsProvider products={products}>
         <CartProvider>
           {/* Top bar + nav are fixed/sticky, together ~64px offset */}
           <TopBrandBar />
@@ -71,6 +80,7 @@ export default function RootLayout({
           {/* Floating cart drawer */}
           <Cart />
         </CartProvider>
+        </ProductsProvider>
       </body>
     </html>
   )

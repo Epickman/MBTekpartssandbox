@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ProductService } from '@/services/productService'
+import { getLiveProducts } from '@/services/liveProducts'
 import TiendaClient from './TiendaClient'
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Repuestos y accesorios para ATV, cuatriciclos y MX. Usá el configurador para armar tu ATV según el terreno.',
 }
 
-export default function TiendaPage() {
-  const products = ProductService.getAll()
+export default async function TiendaPage() {
+  const products = await getLiveProducts()
   return <TiendaClient products={products} />
 }

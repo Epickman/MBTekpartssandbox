@@ -51,11 +51,18 @@ export const ProductService = {
     category?: string
     vehicleId?: string
   }): Product[] {
-    return products.filter((p) => {
-      if (filters.terrain && !p.terrain.includes(filters.terrain)) return false
-      if (filters.category && p.category !== filters.category) return false
-      if (filters.vehicleId && !p.vehicles.includes(filters.vehicleId)) return false
-      return true
-    })
+    return filterProducts(products, filters)
   },
+}
+
+export function filterProducts(
+  list: Product[],
+  filters: { terrain?: Terrain; category?: string; vehicleId?: string }
+): Product[] {
+  return list.filter((p) => {
+    if (filters.terrain && !p.terrain.includes(filters.terrain)) return false
+    if (filters.category && p.category !== filters.category) return false
+    if (filters.vehicleId && !p.vehicles.includes(filters.vehicleId)) return false
+    return true
+  })
 }
