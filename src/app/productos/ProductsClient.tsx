@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Search, SlidersHorizontal, X, MessageCircle, Plus, Check, LayoutGrid, List, ChevronDown } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { generateWhatsAppUrl } from '@/utils/whatsapp'
+import { trackProducts } from '@/utils/trackProducts'
 import { formatPrice, formatStock } from '@/utils/formatPrice'
 import { categories } from '@/data/categories'
 import { vehicleBrands } from '@/data/vehicleBrands'
@@ -471,8 +472,6 @@ function GridView({ products }: { products: Product[] }) {
         const isLarge = i % 7 === 0
         const waUrl = generateWhatsAppUrl({
           product,
-          terrain: state.terrain ?? undefined,
-          vehicle: state.vehicle ?? undefined,
         })
 
         return (
@@ -544,12 +543,13 @@ function GridView({ products }: { products: Product[] }) {
                     : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
                 )}
               >
-                {isInCart ? <><Check size={12} /> En mi ATV</> : <><Plus size={12} /> Mi ATV</>}
+                {isInCart ? <><Check size={12} /> En el carrito</> : <><Plus size={12} /> Agregar</>}
               </button>
               <a
                 href={waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackProducts('order', [product.id])}
                 className="flex items-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--accent)] text-black text-xs font-bold hover:bg-[var(--accent-hover)] transition-all"
                 aria-label="Comprar por WhatsApp"
               >
@@ -573,8 +573,6 @@ function ListView({ products }: { products: Product[] }) {
         const isInCart = state.items.some((it) => it.product.id === product.id)
         const waUrl = generateWhatsAppUrl({
           product,
-          terrain: state.terrain ?? undefined,
-          vehicle: state.vehicle ?? undefined,
         })
 
         return (
@@ -631,12 +629,13 @@ function ListView({ products }: { products: Product[] }) {
                   )}
                 >
                   {isInCart ? <Check size={11} /> : <Plus size={11} />}
-                  {isInCart ? 'En mi ATV' : 'Mi ATV'}
+                  {isInCart ? 'En el carrito' : 'Agregar'}
                 </button>
                 <a
                   href={waUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackProducts('order', [product.id])}
                   className="flex items-center gap-1.5 py-2 px-4 rounded-lg bg-[var(--accent)] text-black text-xs font-bold hover:bg-[var(--accent-hover)] transition-all"
                 >
                   <MessageCircle size={12} />

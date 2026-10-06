@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useCart } from '@/store/cartStore'
 
 const models = [
   { model: 'YFZ450R', img: '/models/yfz450r.jpg' },
@@ -15,10 +14,8 @@ const models = [
 
 export default function MostWanted() {
   const router = useRouter()
-  const { setVehicle } = useCart()
-
-  const pick = (model: string) => {
-    setVehicle({ brand: 'YAMAHA', model })
+  // TODO: filtrar la tienda por modelo cuando los productos tengan los vehículos cargados
+  const pick = () => {
     router.push('/tienda')
   }
 
@@ -48,7 +45,7 @@ export default function MostWanted() {
             <button
               key={m.model}
               type="button"
-              onClick={() => pick(m.model)}
+              onClick={pick}
               className="group flex flex-col items-center text-center"
               aria-label={`Ver repuestos para Yamaha ${m.label ?? m.model}`}
             >

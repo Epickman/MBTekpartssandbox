@@ -1,4 +1,4 @@
-import type { VehicleBrand } from '@/types'
+import type { VehicleBrand, VehicleModel } from '@/types'
 
 // Add or remove brands and models here — reflected everywhere on the site
 // NOTE: Only list brands MBTEK actually carries. This list is a starting point.
@@ -72,3 +72,14 @@ export const vehicleBrands: VehicleBrand[] = [
 
 // Short brand names for the top marquee bar
 export const brandMarqueeNames: string[] = vehicleBrands.map((b) => b.name)
+
+const modelTypes = new Map(vehicleBrands.flatMap((b) => b.models.map((m) => [m.id, m.type] as const)))
+
+/**
+ * ¿El producto sirve para este tipo de vehículo? Se deduce de los modelos compatibles;
+ * un producto sin modelos cargados se considera universal.
+ */
+export function productFitsVehicleType(product: { vehicles: string[] }, type: VehicleModel['type']): boolean {
+  if (product.vehicles.length === 0) return true
+  return product.vehicles.some((id) => modelTypes.get(id) === type)
+}

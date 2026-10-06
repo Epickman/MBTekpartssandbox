@@ -1,9 +1,14 @@
 import Link from 'next/link'
-import { getLiveFeatured } from '@/services/liveProducts'
+import { getLiveProducts } from '@/services/liveProducts'
+import { getProductStats, rankProducts } from '@/services/productStats'
 import ProductCard from '@/components/ProductCard/ProductCard'
 
+// 5 entran justo en la grilla: el primero ocupa dos columnas.
+const SLOTS = 5
+
 export default async function FeaturedProducts() {
-  const featured = await getLiveFeatured()
+  const [products, stats] = await Promise.all([getLiveProducts(), getProductStats()])
+  const featured = rankProducts(products, stats, SLOTS)
 
   return (
     <section className="bg-[var(--black)] py-[clamp(56px,9vw,110px)] px-4" aria-labelledby="featured-heading">
@@ -12,7 +17,7 @@ export default async function FeaturedProducts() {
         <div className="mb-[clamp(30px,5vw,54px)] text-center">
           <div className="mb-eyebrow"><span>Lo más pedido</span></div>
           <h2 id="featured-heading" className="mb-title">
-            Productos <span className="accent">destacados</span>
+            Más vendidos y <span className="accent">consultados</span>
           </h2>
         </div>
 

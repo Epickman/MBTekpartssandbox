@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { MessageCircle, Plus } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { generateWhatsAppUrl } from '@/utils/whatsapp'
+import { trackProducts } from '@/utils/trackProducts'
 import { formatPrice, formatStock } from '@/utils/formatPrice'
 import type { Product } from '@/types'
 import { cn } from '@/utils/cn'
@@ -21,8 +22,6 @@ export default function ProductCard({ product, className, size = 'default' }: Pr
 
   const waUrl = generateWhatsAppUrl({
     product,
-    terrain: state.terrain ?? undefined,
-    vehicle: state.vehicle ?? undefined,
     url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/productos/${product.slug}`,
   })
 
@@ -73,7 +72,7 @@ export default function ProductCard({ product, className, size = 'default' }: Pr
                   ? 'bg-[var(--accent)] text-black'
                   : 'bg-white text-black hover:bg-[var(--accent)]'
               )}
-              aria-label={isInCart ? 'Ya agregado a mi ATV' : 'Agregar a mi ATV'}
+              aria-label={isInCart ? 'Ya está en el carrito' : 'Agregar al carrito'}
             >
               <Plus size={14} />
               {isInCart ? 'Agregado' : 'Agregar'}
@@ -124,9 +123,9 @@ export default function ProductCard({ product, className, size = 'default' }: Pr
               ? 'bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/40'
               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
           )}
-          aria-label={isInCart ? 'Ya en mi ATV' : 'Agregar a mi ATV'}
+          aria-label={isInCart ? 'Ya está en el carrito' : 'Agregar al carrito'}
         >
-          {isInCart ? '✓ En mi ATV' : '+ Mi ATV'}
+          {isInCart ? '✓ En el carrito' : '+ Agregar'}
         </button>
         <a
           href={waUrl}
@@ -134,7 +133,10 @@ export default function ProductCard({ product, className, size = 'default' }: Pr
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--accent)] text-black text-xs font-bold hover:bg-[var(--accent-hover)] transition-all"
           aria-label="Comprar por WhatsApp"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            trackProducts('order', [product.id])
+          }}
         >
           <MessageCircle size={13} />
           <span className="hidden sm:inline">WhatsApp</span>

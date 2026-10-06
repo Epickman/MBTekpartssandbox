@@ -37,13 +37,9 @@ export interface Product {
 export interface CartItem {
   product: Product
   quantity: number
-  vehicle?: Vehicle
-  terrain?: Terrain
 }
 
-export interface ConfiguratorState {
-  terrain: Terrain | null
-  vehicle: Vehicle | null
+export interface CartState {
   items: CartItem[]
 }
 

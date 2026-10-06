@@ -10,6 +10,8 @@ const frameUrl = (i: number) => `/hero/frames/frame_${String(i + 1).padStart(4, 
 // Fracción del scroll del hero en la que el logo se desvanece y aparece el video.
 const INTRO_FADE_END = 0.18
 const VIDEO_MAX_OPACITY = 0.55
+// Parte de cada cartel (a cada lado de su centro) en la que queda quieto y nítido.
+const SLIDE_HOLD = 0.22
 
 const slides = [
   {
@@ -35,6 +37,11 @@ const slides = [
   },
 ]
 
+// Progreso del hero (0–1) en el que cada cartel queda centrado: ahí se "imanta" el scroll.
+const slideProgress = (i: number) =>
+  INTRO_FADE_END + (1 - INTRO_FADE_END) * ((i + 0.5) / slides.length)
+const snapPoints = [0, ...slides.map((_, i) => slideProgress(i))]
+
 export default function HeroScrub() {
   const sectionRef = useRef<HTMLElement>(null)
   const stickyRef = useRef<HTMLDivElement>(null)
@@ -45,6 +52,18 @@ export default function HeroScrub() {
   const hintRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  const snapRefs = useRef<(HTMLDivElement | null)[]>([])
+  const dotsRef = useRef<HTMLDivElement>(null)
+  const dotRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Salta (con scroll suave) al cartel i
+  const goToSlide = (i: number) => {
+    const section = sectionRef.current
+    if (!section) return
+    const scrollable = section.offsetHeight - window.innerHeight
+    const top = section.getBoundingClientRect().top + window.scrollY + slideProgress(i) * scrollable
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     const section = sectionRef.current
@@ -64,11 +83,26 @@ export default function HeroScrub() {
       if (contentRef.current) contentRef.current.style.opacity = '1'
       slidesEls.forEach((el, i) => {
         el.style.opacity = i === slidesEls.length - 1 ? '1' : '0'
+        el.style.setProperty('--d', '0')
         el.style.pointerEvents = i === slidesEls.length - 1 ? 'auto' : 'none'
       })
       if (fallbackRef.current) fallbackRef.current.style.opacity = String(VIDEO_MAX_OPACITY)
       return
     }
+
+    // Efecto imán: el navegador acomoda el scroll en el cartel más cercano al soltar.
+    // Sólo existen puntos de anclaje dentro del hero, así que el resto de la página scrollea normal.
+    const html = document.documentElement
+    const prevSnap = html.style.scrollSnapType
+    html.style.scrollSnapType = 'y proximity'
+
+    const placeSnapPoints = () => {
+      const scrollable = section.offsetHeight - window.innerHeight
+      snapRefs.current.forEach((el, i) => {
+        if (el) el.style.top = `${snapPoints[i] * scrollable}px`
+      })
+    }
+    placeSnapPoints()
 
     const frames: HTMLImageElement[] = []
     const loaded: boolean[] = new Array(FRAME_COUNT).fill(false)
@@ -113,6 +147,7 @@ export default function HeroScrub() {
       canvas.height = Math.round(rect.height * dpr)
       drawn = -1
       if (firstReady) drawFrame(lastIndex)
+      placeSnapPoints()
     }
 
     for (let i = 0; i < FRAME_COUNT; i++) {
@@ -159,6 +194,10 @@ export default function HeroScrub() {
         contentRef.current.style.transform = `translateY(${(1 - t) * 16}px)`
       }
       if (hintRef.current) hintRef.current.style.opacity = String(1 - t)
+      if (dotsRef.current) {
+        dotsRef.current.style.opacity = String(t)
+        dotsRef.current.style.pointerEvents = t > 0.5 ? 'auto' : 'none'
+      }
 
       // Carteles: el resto del scroll se reparte entre ellos en crossfade continuo.
       const n = slidesEls.length
@@ -166,10 +205,20 @@ export default function HeroScrub() {
         const localT = Math.max(0, Math.min(1, (progress - INTRO_FADE_END) / (1 - INTRO_FADE_END)))
         const pos = Math.max(0.5, Math.min(n - 0.5, localT * n))
         slidesEls.forEach((el, i) => {
-          const opacity = Math.max(0, Math.min(1, 1 - Math.abs(pos - (i + 0.5))))
+          // d: -1 (entrando desde abajo) … 0 (centrado) … 1 (saliendo hacia arriba),
+          // con una meseta alrededor del centro para que la frase quede quieta un rato.
+          const raw = Math.max(-1, Math.min(1, pos - (i + 0.5)))
+          const d = Math.sign(raw) * Math.max(0, Math.abs(raw) - SLIDE_HOLD) / (1 - SLIDE_HOLD)
+          const ad = Math.abs(d)
+          const opacity = Math.max(0, 1 - ad * 1.3)
           el.style.opacity = String(opacity)
-          el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none'
+          el.style.setProperty('--d', d.toFixed(3))
+          el.style.transform = `scale(${1 - ad * 0.06})`
+          el.style.filter = ad > 0.01 ? `blur(${(ad * 10).toFixed(1)}px)` : 'none'
+          el.style.pointerEvents = opacity > 0.6 ? 'auto' : 'none'
         })
+        const current = Math.min(n - 1, Math.floor(pos))
+        dotRefs.current.forEach((dot, i) => dot?.toggleAttribute('data-active', i === current))
       }
 
       if (!failed) {
@@ -194,6 +243,7 @@ export default function HeroScrub() {
     onScroll()
 
     return () => {
+      html.style.scrollSnapType = prevSnap
       window.clearTimeout(fallbackTimer)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', resize)
@@ -202,6 +252,18 @@ export default function HeroScrub() {
 
   return (
     <section ref={sectionRef} className="relative h-[320vh] max-sm:h-[260vh]" aria-label="MBTEK Parts — presentación">
+      {/* Puntos de anclaje del efecto imán (posición calculada en placeSnapPoints) */}
+      {snapPoints.map((_, i) => (
+        <div
+          key={i}
+          ref={(el) => {
+            snapRefs.current[i] = el
+          }}
+          className="pointer-events-none absolute left-0 h-px w-px [scroll-snap-align:start]"
+          style={{ top: 0 }}
+          aria-hidden="true"
+        />
+      ))}
       <div ref={stickyRef} className="sticky top-0 h-screen overflow-hidden bg-black flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -218,7 +280,7 @@ export default function HeroScrub() {
         />
 
         {/* Intro: solo el logo */}
-        <div ref={introRef} className="absolute inset-0 z-[3] flex items-center justify-center px-5 will-change-transform">
+        <div ref={introRef} className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center px-5 will-change-transform">
           <Image
             src="/brand/mbtek-logo.png"
             alt="MBTEK Parts Atv & Mx"
@@ -237,24 +299,24 @@ export default function HeroScrub() {
               ref={(el) => {
                 slideRefs.current[i] = el
               }}
-              className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center opacity-0"
+              className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center opacity-0 will-change-transform [--d:1]"
             >
-              <p className="mb-3.5 font-display text-[clamp(12px,1.6vw,15px)] tracking-[6px] text-[var(--accent)] uppercase">
+              <p className="mb-3.5 [transform:translateY(calc(var(--d)*-90px))] font-display text-[clamp(12px,1.6vw,15px)] tracking-[6px] text-[var(--accent)] uppercase">
                 {s.tag}
               </p>
-              <h2 className="mb-4 -skew-x-8 font-display text-[clamp(26px,4.4vw,44px)] uppercase tracking-[1px] text-[var(--chrome-2)] [text-shadow:0_6px_30px_rgba(0,0,0,0.5)]">
+              <h2 className="mb-4 [transform:translateY(calc(var(--d)*-50px))_skewX(-8deg)] font-display text-[clamp(26px,4.4vw,44px)] uppercase tracking-[1px] text-[var(--chrome-2)] [text-shadow:0_6px_30px_rgba(0,0,0,0.5)]">
                 {s.headline}
               </h2>
-              <p className="mb-8 max-w-[560px] text-[clamp(13px,2vw,17px)] uppercase leading-relaxed tracking-[2px] text-zinc-300">
+              <p className="mb-8 max-w-[560px] [transform:translateY(calc(var(--d)*-25px))] text-[clamp(13px,2vw,17px)] uppercase leading-relaxed tracking-[2px] text-zinc-300">
                 {s.sub}
               </p>
               {s.cta && (
-                <div className="flex flex-wrap justify-center gap-3.5">
+                <div className="relative z-[1] flex flex-wrap justify-center gap-3.5 [transform:translateY(calc(var(--d)*-12px))]">
                   <Link href="/tienda" className="mb-btn mb-btn-solid">
                     Ver catálogo
                   </Link>
-                  <Link href="/configurador" className="mb-btn mb-btn-outline">
-                    Armá tu ATV
+                  <Link href="/personalizar" className="mb-btn mb-btn-outline">
+                    Personalizá tu ATV / MX
                   </Link>
                 </div>
               )}
@@ -262,7 +324,31 @@ export default function HeroScrub() {
           ))}
         </div>
 
-        <div ref={hintRef} className="absolute bottom-7 left-1/2 z-[2] flex -translate-x-1/2 flex-col items-center gap-2 text-zinc-500" aria-hidden="true">
+        {/* Indicador de frases (se puede tocar para saltar a cada una) */}
+        <div
+          ref={dotsRef}
+          className="absolute right-5 top-1/2 z-[4] flex -translate-y-1/2 flex-col gap-3 opacity-0 sm:right-8"
+          aria-label="Frases"
+        >
+          {slides.map((s, i) => (
+            <button
+              key={s.headline}
+              ref={(el) => {
+                dotRefs.current[i] = el
+              }}
+              onClick={() => goToSlide(i)}
+              aria-label={`Ir a: ${s.headline}`}
+              className="group flex items-center justify-end gap-3 py-1"
+            >
+              <span className="hidden text-[10px] uppercase tracking-[2px] text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100 sm:inline">
+                {s.tag}
+              </span>
+              <span className="block h-2 w-2 rounded-full bg-white/30 transition-all duration-300 group-hover:bg-white/70 group-data-[active]:h-6 group-data-[active]:bg-[var(--accent)]" />
+            </button>
+          ))}
+        </div>
+
+        <div ref={hintRef} className="pointer-events-none absolute bottom-7 left-1/2 z-[2] flex -translate-x-1/2 flex-col items-center gap-2 text-zinc-500" aria-hidden="true">
           <span className="text-[10px] uppercase tracking-[3px]">Scroll</span>
           <div className="relative h-10 w-px overflow-hidden bg-white/20">
             <i ref={barRef} className="absolute left-0 top-0 block h-[0%] w-full bg-[var(--accent)]" />

@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect } from 'react'
 import { MessageCircle, Plus, Check } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { generateWhatsAppUrl } from '@/utils/whatsapp'
+import { trackProducts } from '@/utils/trackProducts'
 import type { Product } from '@/types'
 
 interface Props {
@@ -13,11 +15,13 @@ export default function ProductDetailClient({ product }: Props) {
   const { addItem, state } = useCart()
   const isInCart = state.items.some((i) => i.product.id === product.id)
 
+  useEffect(() => {
+    trackProducts('view', [product.id])
+  }, [product.id])
+
   const waUrl = generateWhatsAppUrl({
     product,
-    terrain: state.terrain ?? undefined,
-    vehicle: state.vehicle ?? undefined,
-    url: `${typeof window !== 'undefined' ? window.location.href : ''}`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/productos/${product.slug}`,
   })
 
   return (
@@ -33,12 +37,12 @@ export default function ProductDetailClient({ product }: Props) {
         {isInCart ? (
           <span className="flex items-center justify-center gap-2">
             <Check size={16} />
-            Agregado a mi ATV
+            Agregado al carrito
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">
             <Plus size={16} />
-            Agregar a mi ATV
+            Agregar al carrito
           </span>
         )}
       </button>
@@ -47,6 +51,7 @@ export default function ProductDetailClient({ product }: Props) {
         href={waUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackProducts('order', [product.id])}
         className="w-full flex items-center justify-center gap-2 py-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-black font-black text-sm tracking-[0.2em] uppercase rounded-full transition-all hover:scale-[1.02]"
       >
         <MessageCircle size={18} />

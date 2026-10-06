@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
-import { useCart } from '@/store/cartStore'
 import type { Terrain } from '@/types'
 
 const panels = [
@@ -34,11 +33,8 @@ const panels = [
 export default function HeroSection() {
   const [hovered, setHovered] = useState<Terrain | null>(null)
   const router = useRouter()
-  const { setTerrain } = useCart()
-
   const handleSelect = (terrain: Terrain) => {
-    setTerrain(terrain)
-    router.push('/tienda')
+    router.push(`/tienda?terreno=${terrain}`)
   }
 
   return (

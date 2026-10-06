@@ -74,7 +74,7 @@ export default function Footer() {
               { label: 'Productos', href: '/productos' },
               { label: 'ATV', href: '/productos?tipo=atv' },
               { label: 'MX', href: '/productos?tipo=mx' },
-              { label: 'Configurá tu ATV', href: '/configurador' },
+              { label: 'Personalizá tu ATV / MX', href: '/personalizar' },
             ].map((link) => (
               <li key={link.href}>
                 <Link

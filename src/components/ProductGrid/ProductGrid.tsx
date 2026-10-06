@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ProductCard from '@/components/ProductCard/ProductCard'
 import { categories, getCategoriesByTerrain } from '@/data/categories'
 import type { Product, Terrain } from '@/types'
@@ -27,6 +28,32 @@ export default function ProductGrid({
     initialCategory && categories.some((c) => c.id === initialCategory) ? initialCategory : 'all'
   )
 
+  const filtersRef = useRef<HTMLDivElement>(null)
+  const [canScroll, setCanScroll] = useState({ left: false, right: false })
+
+  // Muestra cada flecha solo si queda contenido escondido de ese lado.
+  const updateArrows = useCallback(() => {
+    const el = filtersRef.current
+    if (!el) return
+    setCanScroll({
+      left: el.scrollLeft > 1,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+    })
+  }, [])
+
+  useEffect(() => {
+    const el = filtersRef.current
+    if (!el) return
+    const observer = new ResizeObserver(updateArrows)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [updateArrows])
+
+  const scrollFilters = (dir: -1 | 1) => {
+    const el = filtersRef.current
+    el?.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: 'smooth' })
+  }
+
   const filterCategories = terrain ? getCategoriesByTerrain(terrain) : categories
   const filtered =
     activeCategory === 'all'
@@ -45,7 +72,32 @@ export default function ProductGrid({
 
       {/* Category filters */}
       {showFilters && (
-        <div className="max-w-screen-xl mx-auto mb-8 overflow-x-auto pb-2">
+        <div className="relative max-w-screen-xl mx-auto mb-8">
+          {canScroll.left && (
+            <button
+              type="button"
+              onClick={() => scrollFilters(-1)}
+              aria-label="Ver filtros anteriores"
+              className="absolute left-0 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 shadow-[12px_0_16px_8px_rgb(9_9_11)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          )}
+          {canScroll.right && (
+            <button
+              type="button"
+              onClick={() => scrollFilters(1)}
+              aria-label="Ver más filtros"
+              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 shadow-[-12px_0_16px_8px_rgb(9_9_11)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              <ChevronRight size={18} />
+            </button>
+          )}
+          <div
+            ref={filtersRef}
+            onScroll={updateArrows}
+            className="no-scrollbar overflow-x-auto"
+          >
           <div className="flex gap-2 min-w-max">
             <button
               onClick={() => setActiveCategory('all')}
@@ -72,6 +124,7 @@ export default function ProductGrid({
                 {cat.name}
               </button>
             ))}
+          </div>
           </div>
         </div>
       )}

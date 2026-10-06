@@ -183,6 +183,10 @@ body {
 ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
+/* Scroll horizontal sin barra visible (se navega con flechas, rueda o swipe) */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ── Focus ring ───────────────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--accent);

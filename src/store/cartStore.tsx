@@ -5,37 +5,30 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useState,
+  useCallback,
   type ReactNode,
 } from 'react'
-import type { ConfiguratorState, Product, Vehicle, Terrain } from '@/types'
+import type { CartState, Product } from '@/types'
 import { useProducts } from '@/store/productsContext'
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 
 type Action =
-  | { type: 'SET_TERRAIN'; terrain: Terrain }
-  | { type: 'SET_VEHICLE'; vehicle: Vehicle }
   | { type: 'ADD_ITEM'; product: Product; quantity?: number }
   | { type: 'REMOVE_ITEM'; productId: string }
   | { type: 'UPDATE_QTY'; productId: string; quantity: number }
   | { type: 'CLEAR' }
+  | { type: 'HYDRATE'; state: CartState }
 
 // ── State / Reducer ───────────────────────────────────────────────────────────
 
-const initialState: ConfiguratorState = {
-  terrain: null,
-  vehicle: null,
+const initialState: CartState = {
   items: [],
 }
 
-function reducer(state: ConfiguratorState, action: Action): ConfiguratorState {
+function reducer(state: CartState, action: Action): CartState {
   switch (action.type) {
-    case 'SET_TERRAIN':
-      return { ...state, terrain: action.terrain }
-
-    case 'SET_VEHICLE':
-      return { ...state, vehicle: action.vehicle }
-
     case 'ADD_ITEM': {
       const existing = state.items.find((i) => i.product.id === action.product.id)
       if (existing) {
@@ -50,15 +43,7 @@ function reducer(state: ConfiguratorState, action: Action): ConfiguratorState {
       }
       return {
         ...state,
-        items: [
-          ...state.items,
-          {
-            product: action.product,
-            quantity: action.quantity ?? 1,
-            terrain: state.terrain ?? undefined,
-            vehicle: state.vehicle ?? undefined,
-          },
-        ],
+        items: [...state.items, { product: action.product, quantity: action.quantity ?? 1 }],
       }
     }
 
@@ -76,6 +61,9 @@ function reducer(state: ConfiguratorState, action: Action): ConfiguratorState {
     case 'CLEAR':
       return { ...state, items: [] }
 
+    case 'HYDRATE':
+      return action.state
+
     default:
       return state
   }
@@ -84,14 +72,17 @@ function reducer(state: ConfiguratorState, action: Action): ConfiguratorState {
 // ── Context ───────────────────────────────────────────────────────────────────
 
 type CartContextValue = {
-  state: ConfiguratorState
-  setTerrain: (terrain: Terrain) => void
-  setVehicle: (vehicle: Vehicle) => void
+  state: CartState
   addItem: (product: Product, quantity?: number) => void
   removeItem: (productId: string) => void
   updateQty: (productId: string, quantity: number) => void
   clear: () => void
   totalItems: number
+  /** Suma de los productos con precio (los "a consultar" no cuentan) */
+  subtotal: number
+  isOpen: boolean
+  openCart: () => void
+  closeCart: () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -99,18 +90,29 @@ const CartContext = createContext<CartContextValue | null>(null)
 const STORAGE_KEY = 'mbtek-cart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState, (init) => {
-    if (typeof window === 'undefined') return init
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const [isOpen, setIsOpen] = useState(false)
+  const openCart = useCallback(() => setIsOpen(true), [])
+  const closeCart = useCallback(() => setIsOpen(false), [])
+
+  // El primer render tiene que coincidir con el del servidor (carrito vacío);
+  // lo guardado en localStorage se carga recién después de montar.
+  useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? (JSON.parse(saved) as ConfiguratorState) : init
+      if (!saved) return
+      // Versiones anteriores guardaban también terreno y vehículo: sólo nos quedamos con los items
+      const { items } = JSON.parse(saved) as Partial<CartState>
+      if (Array.isArray(items)) dispatch({ type: 'HYDRATE', state: { items } })
     } catch {
-      return init
+      // localStorage unavailable or corrupt — start empty
     }
-  })
+  }, [])
 
-  // Persist to localStorage whenever state changes
+  // Persist to localStorage whenever state changes — skipping the untouched
+  // initial state so it doesn't overwrite what's saved before it's loaded
   useEffect(() => {
+    if (state === initialState) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     } catch {
@@ -121,7 +123,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // El carrito guarda una copia del producto al agregarlo; se reemplaza por la versión actual
   // del catálogo para que precio, stock y fotos estén siempre al día.
   const catalog = useProducts()
-  const freshState: ConfiguratorState = {
+  const freshState: CartState = {
     ...state,
     items: state.items.map((item) => {
       const current =
@@ -133,13 +135,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value: CartContextValue = {
     state: freshState,
-    setTerrain: (terrain) => dispatch({ type: 'SET_TERRAIN', terrain }),
-    setVehicle: (vehicle) => dispatch({ type: 'SET_VEHICLE', vehicle }),
     addItem: (product, quantity) => dispatch({ type: 'ADD_ITEM', product, quantity }),
     removeItem: (productId) => dispatch({ type: 'REMOVE_ITEM', productId }),
     updateQty: (productId, quantity) => dispatch({ type: 'UPDATE_QTY', productId, quantity }),
     clear: () => dispatch({ type: 'CLEAR' }),
     totalItems: freshState.items.reduce((sum, i) => sum + i.quantity, 0),
+    subtotal: freshState.items.reduce((sum, i) => sum + (i.product.price ?? 0) * i.quantity, 0),
+    isOpen,
+    openCart,
+    closeCart,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

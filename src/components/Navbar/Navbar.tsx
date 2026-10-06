@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, MessageCircle } from 'lucide-react'
+import { Menu, X, MessageCircle, ShoppingCart } from 'lucide-react'
 import { InstagramIcon } from '@/components/ui/icons'
 import siteConfig from '@/config/site'
+import { useCart } from '@/store/cartStore'
 import { cn } from '@/utils/cn'
 
 const navLinks = [
   { label: 'Tienda', href: '/tienda' },
+  { label: 'Personalizar', href: '/personalizar' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Contacto', href: '/contacto' },
 ]
@@ -17,6 +19,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const { totalItems, openCart } = useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -46,16 +49,16 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 group"
+          className="relative flex items-center group"
           aria-label="MBTEK Parts — Inicio"
         >
-          <Image
-            src="/brand/mbtek-flag.png"
+          {/* Bandera de la marca detrás del logo, igual que en "Cuatriciclos más buscados" */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/brand-flag.png"
             alt=""
-            width={166}
-            height={61}
-            priority
-            className={cn('w-auto -mt-2 transition-all duration-300', scrolled ? 'h-4' : 'h-5')}
+            aria-hidden="true"
+            className="pointer-events-none absolute right-[calc(100%-4px)] top-1/2 h-[90%] w-[100px] max-w-none object-fill -translate-y-1/2 opacity-[0.55] [filter:grayscale(1)_brightness(2)_blur(0.5px)] [mask-image:linear-gradient(90deg,transparent_0%,#000_55%,#000_100%)]"
           />
           <Image
             src="/brand/mbtek-logo-text.png"
@@ -63,7 +66,7 @@ export default function Navbar() {
             width={1675}
             height={405}
             priority
-            className={cn('w-auto transition-all duration-300', scrolled ? 'h-8' : 'h-10')}
+            className={cn('relative w-auto transition-all duration-300', scrolled ? 'h-8' : 'h-10')}
           />
         </Link>
 
@@ -93,6 +96,8 @@ export default function Navbar() {
             <InstagramIcon size={20} />
           </a>
 
+          <CartButton count={totalItems} onClick={openCart} />
+
           <a
             href={whatsappUrl}
             target="_blank"
@@ -107,6 +112,7 @@ export default function Navbar() {
 
         {/* Mobile: burger */}
         <div className="flex lg:hidden items-center gap-4">
+          <CartButton count={totalItems} onClick={openCart} />
           <button
             onClick={() => setOpen(!open)}
             className="text-white p-1"
@@ -160,5 +166,22 @@ export default function Navbar() {
         </div>
       </div>
     </header>
+  )
+}
+
+function CartButton({ count, onClick }: { count: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="relative p-1 text-zinc-200 transition-colors hover:text-white"
+      aria-label={`Abrir carrito (${count} producto${count !== 1 ? 's' : ''})`}
+    >
+      <ShoppingCart size={22} />
+      {count > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold leading-none text-white">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </button>
   )
 }
