@@ -16,7 +16,9 @@ const PROMO_QUERY = `*[_type == "promotion" && active != false
   && (!defined(startsAt) || startsAt <= now())
   && (!defined(endsAt) || endsAt > now())
 ] | order(coalesce(startsAt, _createdAt) desc)[0]{
-  eyebrow, title, description, ctaLabel, ctaType, ctaWhatsappMessage, ctaCategory, ctaUrl,
+  eyebrow, title, description,
+  "image": image{ alt, hotspot, "url": asset->url },
+  ctaLabel, ctaType, ctaWhatsappMessage, ctaCategory, ctaUrl,
   "items": items[]{ "productId": product._ref, salePrice }
 }`
 
@@ -24,6 +26,11 @@ interface SanityPromotion {
   eyebrow?: string | null
   title?: string | null
   description?: string | null
+  image?: {
+    alt?: string | null
+    hotspot?: { x: number; y: number } | null
+    url?: string | null
+  } | null
   ctaLabel?: string | null
   ctaType?: 'whatsapp' | 'category' | 'link' | null
   ctaWhatsappMessage?: string | null
@@ -41,6 +48,8 @@ export interface Promotion {
   eyebrow?: string
   title: string
   description?: string
+  /** position = punto de interés marcado en Sanity, para que object-fit no lo corte */
+  image?: { url: string; alt: string; position: string }
   cta: { label: string; href: string; external: boolean }
   items: PromotionItem[]
 }
@@ -75,6 +84,16 @@ export async function getActivePromotion(): Promise<Promotion | null> {
       eyebrow: result.eyebrow ?? undefined,
       title: result.title,
       description: result.description ?? undefined,
+      image: result.image?.url
+        ? {
+            // Sanity sirve la imagen ya optimizada; 1200px alcanza para el banner
+            url: `${result.image.url}?w=1200&auto=format`,
+            alt: result.image.alt ?? '',
+            position: result.image.hotspot
+              ? `${Math.round(result.image.hotspot.x * 100)}% ${Math.round(result.image.hotspot.y * 100)}%`
+              : 'center',
+          }
+        : undefined,
       cta: { label: result.ctaLabel || 'Quiero saber más', ...ctaHref(result, result.title) },
       items,
     }
