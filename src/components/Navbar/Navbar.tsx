@@ -58,7 +58,7 @@ export default function Navbar() {
             src="/brand/brand-flag.png"
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute right-[calc(100%-4px)] top-1/2 h-[90%] w-[100px] max-w-none object-fill -translate-y-1/2 opacity-[0.55] [filter:grayscale(1)_brightness(2)_blur(0.5px)] [mask-image:linear-gradient(90deg,transparent_0%,#000_55%,#000_100%)]"
+            className="pointer-events-none absolute right-[calc(100%+12px)] top-1/2 h-[90%] w-[100px] max-w-none object-fill -translate-y-1/2 opacity-[0.55] [filter:grayscale(1)_brightness(2)_blur(0.5px)] [mask-image:linear-gradient(90deg,transparent_0%,#000_55%,#000_100%)]"
           />
           <Image
             src="/brand/mbtek-logo-text.png"
